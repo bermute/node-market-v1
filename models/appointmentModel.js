@@ -1,5 +1,10 @@
 const pool = require("../data/db");
 
+async function getAllAppointments() {
+  const [rows] = await pool.query("SELECT * FROM appointments");
+  return rows;
+}
+
 async function getAppointmentByPost(postId) {
   const [rows] = await pool.query(
     "SELECT * FROM appointments WHERE postId = ?",
@@ -10,18 +15,12 @@ async function getAppointmentByPost(postId) {
 
 async function addAppointment(data) {
   await pool.query(
-    `INSERT INTO appointments (id, postId, buyerId, sellerId, datetime, place)
-     VALUES (?, ?, ?, ?, ?, ?)`,
-    [
-      data.id,
-      data.postId,
-      data.buyerId,
-      data.sellerId,
-      data.datetime,
-      data.place
-    ]
+    `INSERT INTO appointments (postId, buyerId, sellerId, datetime, place)
+     VALUES (?, ?, ?, ?, ?)`,
+    [data.postId, data.buyerId, data.sellerId, data.datetime, data.place]
   );
-  return data;
+
+  return await getAppointmentByPost(data.postId);
 }
 
 async function requestAppointmentCancellation(postId, userId) {
@@ -52,6 +51,9 @@ async function finalizeAppointmentCancellation(postId) {
 }
 
 module.exports = {
+  getAllAppointments,
   getAppointmentByPost,
-  addAppointment
+  addAppointment,
+  requestAppointmentCancellation,
+  finalizeAppointmentCancellation
 };
