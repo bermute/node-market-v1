@@ -1,0 +1,61 @@
+@startuml
+' =========================
+' Users Table
+' =========================
+entity users {
+  + id : INT <<PK>>
+  --
+  name : VARCHAR(50)
+  address : VARCHAR(255)
+}
+
+' =========================
+' Posts Table
+' =========================
+entity posts {
+  + id : INT <<PK>>
+  --
+  title : VARCHAR(255)
+  description : TEXT
+  price : INT
+  imageUrl : VARCHAR(255)
+  sellerId : INT <<FK>>
+  location : VARCHAR(255)
+  status : VARCHAR(20)
+  createdAt : DATETIME
+}
+
+' =========================
+' Messages Table
+' =========================
+entity messages {
+  + id : INT <<PK>>
+  --
+  postId : INT <<FK>>
+  senderId : INT <<FK>>
+  content : TEXT
+  createdAt : DATETIME
+}
+
+' =========================
+' Appointments Table
+' =========================
+entity appointments {
+  + postId : INT <<PK, FK>>
+  --
+  buyerId : INT <<FK>>
+  createdAt : DATETIME
+  cancelRequestedBy : INT <<FK>>
+}
+
+' =========================
+' Relationships
+' =========================
+
+users ||--o{ posts : sells
+users ||--o{ messages : sends
+posts ||--o{ messages : has
+posts ||--|| appointments : reserved
+users ||--o{ appointments : buys
+
+@enduml
