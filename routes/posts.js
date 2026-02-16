@@ -19,19 +19,19 @@ const {
   addPost,
   updatePost,
   deletePost
-} = require("../model/postModel");
+} = require("../models/postModel");
 const {
   getUsers,
   getUserById
-} = require("../model/userModel");
+} = require("../models/userModel");
 
 const {
   getMessagesByPost
-} = require("../model/messageModel");
+} = require("../models/messageModel");
 const {
   getAppointmentByPost,
   addAppointment
-} = require("../model/appointmentModel");
+} = require("../models/appointmentModel");
 
 const DEFAULT_IMAGE = "/uploads/r3.jpg";
 
@@ -39,11 +39,11 @@ function createPostsRouter(upload) {
   const router = express.Router();
 
   // 모든 페이지에서 현재 사용자 정보를 공유합니다.
-  router.use((req, res, next) => {
+  router.use(async (req, res, next) => {
     res.locals.request = req;
     const currentUserId = req.query.user || req.body?.currentUserId || "user1";
     res.locals.currentUserId = currentUserId;
-    res.locals.users = getUsers();
+    res.locals.users = await getUsers();
     next();
   });
 
@@ -56,18 +56,18 @@ function createPostsRouter(upload) {
   });
 
   // 판매글 작성 화면
-  router.get("/posts/new", (req, res) => {
-    const currentUser = getUserById(res.locals.currentUserId);
+  router.get("/posts/new", async (req, res) => {
+    const currentUser = await getUserById(res.locals.currentUserId);
     res.render("post_new", {
       defaultLocation: currentUser?.address || ""
     });
   });
 
   // 판매글 저장
-  router.post("/posts", upload.single("image"), (req, res) => {
+  router.post("/posts", upload.single("image"), async (req, res) => {
     const { title, price, location, description, sellerId } = req.body;
 
-    const seller = getUserById(sellerId);
+    const seller = await getUserById(sellerId);
     const sanitizedLocation = location || seller?.address || "";
     const filePath = req.file ? `/uploads/${path.basename(req.file.path)}` : DEFAULT_IMAGE;
 
@@ -82,21 +82,21 @@ function createPostsRouter(upload) {
       status: "판매중",
     };
 
-    addPost(newPost);
+    await addPost(newPost);
 
     res.redirect(`/?user=${sellerId}`);
   });
 
-  function enrichMessages(messages = []) {
-    return messages.map((msg) => {
-      const sender = getUserById(msg.senderId);
-      const receiver = getUserById(msg.receiverId);
+  async function enrichMessages(messages = []) {
+    return Promise.all(messages.map(async (msg) => {
+      const sender = await getUserById(msg.senderId);
+      const receiver = await getUserById(msg.receiverId);
       return {
         ...msg,
         senderName: sender?.name || msg.senderId,
         receiverName: receiver?.name || msg.receiverId
       };
-    });
+    }));
   }
 
   // 판매글 상세 + 채팅/약속 화면
@@ -108,8 +108,8 @@ function createPostsRouter(upload) {
 
     res.render("post_show", {
       post,
-      messages: enrichMessages(getMessagesByPost(post.id)),
-      appointment: getAppointmentByPost(post.id),
+      messages: await enrichMessages(await getMessagesByPost(post.id)),
+      appointment: await getAppointmentByPost(post.id),
       errorMessage: req.query.error || null
     });
   });
@@ -123,12 +123,12 @@ function createPostsRouter(upload) {
     if (post.sellerId !== currentUser) {
       return res.status(403).render("404", { message: "삭제 권한이 없습니다." });
     }
-    const appointment = getAppointmentByPost(post.id);
+    const appointment = await getAppointmentByPost(post.id);
     if (post.status === "예약중" && appointment) {
       return res.redirect(`/posts/${post.id}?user=${currentUser}&error=예약을 먼저 철회해야 삭제할 수 있습니다.`);
     }
 
-    deletePost(post.id);
+    await deletePost(post.id);
     clearAppointmentReminder(post.id);
     res.redirect(`/?user=${currentUser}`);
   });

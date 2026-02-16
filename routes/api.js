@@ -15,21 +15,21 @@ const {
   addPost,
   updatePost,
   deletePost
-} = require("../model/postModel");
+} = require("../models/postModel");
 const {
   getUsers,
   getUserById
-} = require("../model/userModel");
+} = require("../models/userModel");
 
 const {
   getMessagesByPost
-} = require("../model/messageModel");
+} = require("../models/messageModel");
 const {
   getAppointmentByPost,
   addAppointment,
   requestAppointmentCancellation,
   finalizeAppointmentCancellation
-} = require("../model/appointmentModel");
+} = require("../models/appointmentModel");
 
 
 const { generateSalePostDescription } = require("../services/aiService");
