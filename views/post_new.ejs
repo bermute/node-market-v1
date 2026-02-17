@@ -1,7 +1,7 @@
 <% const renderBody = () => { %>
   <section class="form-shell">
     <h2>새 판매글 작성</h2>
-    <form action="/posts?user=<%= currentUserId %>" method="POST" enctype="multipart/form-data" id="postForm">
+    <form action="/posts" method="POST" enctype="multipart/form-data" id="postForm">
       <input type="hidden" name="sellerId" value="<%= currentUserId %>" />
       <div class="form-field">
         <label for="image">상품 사진</label>
@@ -25,7 +25,7 @@
         <textarea id="description" name="description" rows="6" placeholder="상품 상태, 사용기간 등을 적어주세요."></textarea>
       </div>
       <div class="form-actions">
-        <a class="btn secondary" href="/?user=<%= currentUserId %>">목록으로</a>
+        <a class="btn secondary" href="/">목록으로</a>
         <button type="submit" class="btn primary">등록하기</button>
       </div>
     </form>
@@ -51,6 +51,5 @@
   renderBody,
   pageTitle: "판매글 작성"
 }) %>
-
 
 

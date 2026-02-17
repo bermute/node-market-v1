@@ -1,35 +1,15 @@
 const express = require("express");
-// const { v4: uuidv4 } = require("uuid");
-// const {
-//   getPostById,
-//   getAppointmentByPost,
-//   addAppointment,
-//   updatePost,
-//   requestAppointmentCancellation,
-//   finalizeAppointmentCancellation
-// } = require("../data/db");
-const pool = require("../data/db");
+const { randomUUID } = require("crypto");
 const {  
-  getPosts,
   getPostById,
-  addPost,
-  updatePost,
-  deletePost
-} = require("../model/postModel");
-const {
-  getUsers,
-  getUserById
-} = require("../model/userModel");
-
-const {
-  getMessagesByPost
-} = require("../model/messageModel");
+  updatePost
+} = require("../models/postModel");
 const {
   getAppointmentByPost,
   addAppointment,
   requestAppointmentCancellation,
   finalizeAppointmentCancellation
-} = require("../model/appointmentModel");
+} = require("../models/appointmentModel");
 
 
 const { generateSalePostDescription } = require("../services/aiService");
@@ -37,6 +17,13 @@ const { scheduleAppointmentReminder, clearAppointmentReminder } = require("../se
 
 function createApiRouter(io) {
   const router = express.Router();
+
+  router.use((req, res, next) => {
+    if (!req.session?.userId) {
+      return res.status(401).json({ success: false, message: "로그인이 필요합니다." });
+    }
+    return next();
+  });
 
   // 판매글 설명을 AI에게 요청
   router.post("/ai/generate-post", async (req, res) => {
@@ -92,6 +79,7 @@ function createApiRouter(io) {
     }
 
     const appointment = await addAppointment({
+      id: randomUUID(),
       postId: post.id,
       buyerId,
       sellerId: post.sellerId,
@@ -179,4 +167,3 @@ function createApiRouter(io) {
 }
 
 module.exports = createApiRouter;
-

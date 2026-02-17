@@ -34,16 +34,33 @@ a {
   color: #64748b;
 }
 
-.user-switcher {
+.header-auth {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
 
-.user-switcher select {
-  padding: 0.45rem 0.7rem;
-  border-radius: 999px;
-  border: none;
+.welcome-text {
+  font-weight: 700;
+}
+
+.inline-form {
+  margin: 0;
+}
+
+.auth-shell {
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+.auth-link {
+  margin-top: 1rem;
+  color: #475569;
+}
+
+.auth-link a {
+  color: #c45816;
+  font-weight: 600;
 }
 
 .page-container {
@@ -379,6 +396,5 @@ a {
     grid-template-columns: 1fr;
   }
 }
-
 
 

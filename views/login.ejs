@@ -1,0 +1,27 @@
+<% const renderBody = () => { %>
+  <section class="form-shell auth-shell">
+    <h2>로그인</h2>
+    <% if (errorMessage) { %>
+      <div class="alert error"><%= errorMessage %></div>
+    <% } %>
+    <form action="/login" method="POST">
+      <div class="form-field">
+        <label for="username">아이디</label>
+        <input type="text" id="username" name="username" required />
+      </div>
+      <div class="form-field">
+        <label for="password">비밀번호</label>
+        <input type="password" id="password" name="password" required />
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn primary">로그인</button>
+      </div>
+    </form>
+    <p class="auth-link">계정이 없으신가요? <a href="/signup">회원가입</a></p>
+  </section>
+<% } %>
+
+<%- include("layout", {
+  renderBody,
+  pageTitle: "로그인"
+}) %>

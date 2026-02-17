@@ -17,7 +17,7 @@
             <p class="price"><%= post.price.toLocaleString() %> 원</p>
             <p class="meta"><%= post.location %></p>
           </div>
-          <a class="btn secondary" href="/posts/<%= post.id %>?user=<%= currentUserId %>">상세 보기</a>
+          <a class="btn secondary" href="/posts/<%= post.id %>">상세 보기</a>
         </article>
       <% }) %>
     <% } %>
@@ -28,6 +28,5 @@
   renderBody,
   pageTitle: "판매글 리스트"
 }) %>
-
 
 

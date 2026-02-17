@@ -14,16 +14,17 @@
       <h1><a href="/">중고거래 판매글·채팅·약속잡기</a></h1>
       <p class="subtitle">Node.js + OpenAI 실습용 미니 서비스</p>
     </div>
-    <div class="user-switcher">
-      <label for="userSelect">현재 사용자</label>
-      <select id="userSelect" data-current-path="<%= typeof request !== 'undefined' ? request.path : '/' %>">
-        <% (users || []).forEach((user) => { %>
-          <option value="<%= user.id %>" <%= user.id === currentUserId ? "selected" : "" %>>
-            <%= user.name %> (<%= user.address %>)
-          </option>
-        <% }) %>
-      </select>
-      <a href="/posts/new?user=<%= currentUserId %>" class="btn primary">판매글 올리기</a>
+    <div class="header-auth">
+      <% if (authUser) { %>
+        <span class="welcome-text"><%= authUser.name %>님</span>
+        <a href="/posts/new" class="btn primary">판매글 올리기</a>
+        <form method="POST" action="/logout" class="inline-form">
+          <button type="submit" class="btn secondary">로그아웃</button>
+        </form>
+      <% } else { %>
+        <a href="/login" class="btn secondary">로그인</a>
+        <a href="/signup" class="btn primary">회원가입</a>
+      <% } %>
     </div>
   </header>
 
@@ -35,7 +36,7 @@
 
   <script>
     window.App = {
-      currentUserId: "<%= currentUserId || 'user1' %>",
+      currentUserId: "<%= currentUserId || '' %>",
       currentPostId: "<%= typeof post !== "undefined" && post ? post.id : "" %>",
       sellerId: "<%= typeof post !== "undefined" && post ? post.sellerId : "" %>"
     };
@@ -47,6 +48,5 @@
   <script src="/js/schedule.js"></script>
 </body>
 </html>
-
 
 

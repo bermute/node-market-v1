@@ -3,9 +3,9 @@
 <% const renderBody = () => { %>
   <section class="post-detail">
     <div class="detail-actions">
-      <a class="btn secondary" href="/?user=<%= currentUserId %>">&larr; 목록으로 돌아가기</a>
+      <a class="btn secondary" href="/">&larr; 목록으로 돌아가기</a>
       <% if (post.sellerId === currentUserId) { %>
-        <form method="POST" action="/posts/<%= post.id %>/delete?user=<%= currentUserId %>" onsubmit="return confirm('정말로 이 판매글을 삭제할까요?');">
+        <form method="POST" action="/posts/<%= post.id %>/delete" onsubmit="return confirm('정말로 이 판매글을 삭제할까요?');">
           <button type="submit" class="btn danger">게시글 삭제</button>
         </form>
       <% } %>
@@ -127,4 +127,3 @@
   renderBody,
   pageTitle: post.title
 }) %>
-

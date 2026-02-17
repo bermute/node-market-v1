@@ -8,15 +8,23 @@ const { Server } = require("socket.io");
 const dayjs = require("dayjs");
 
 const {
+  getPostById
+} = require("./models/postModel");
+const {
   addMessage,
-  getPostById,
-  getMessagesByPost,
-  getStateSnapshot,
+  getMessagesByPost
+} = require("./models/messageModel");
+const {
   getUserById
-} = require("./data/db");
+} = require("./models/userModel");
+const {
+  getAppointments
+} = require("./models/appointmentModel");
+const createAuthRouter = require("./routes/auth");
 const createPostsRouter = require("./routes/posts");
 const createApiRouter = require("./routes/api");
 const { scheduleAppointmentReminder } = require("./services/notificationService");
+const { sessionMiddleware } = require("./services/sessionService");
 
 const app = express();
 const httpServer = createServer(app);
@@ -49,17 +57,19 @@ app.locals.dayjs = dayjs;
 
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(express.json({ limit: "10mb" }));
+app.use(sessionMiddleware);
 app.use(express.static(path.join(__dirname, "public")));
 
 // 라우터 연결
+app.use("/", createAuthRouter());
 app.use("/", createPostsRouter(upload));
 app.use("/api", createApiRouter(io));
 
 app.get("/health", (_req, res) => res.json({ ok: true }));
 
-function enrichMessage(message) {
-  const sender = getUserById(message.senderId);
-  const receiver = getUserById(message.receiverId);
+async function enrichMessage(message) {
+  const sender = await getUserById(message.senderId);
+  const receiver = await getUserById(message.receiverId);
   return {
     ...message,
     senderName: sender?.name || message.senderId,
@@ -69,38 +79,44 @@ function enrichMessage(message) {
 
 // socket.io 이벤트 (채팅방 입장 + 메시지 브로드캐스트)
 io.on("connection", (socket) => {
-  socket.on("joinRoom", ({ postId }) => {
+  socket.on("joinRoom", async ({ postId }) => {
     socket.join(postId);
-    const history = getMessagesByPost(postId).map(enrichMessage);
+    const rawMessages = await getMessagesByPost(postId);
+    const history = await Promise.all(rawMessages.map((message) => enrichMessage(message)));
     socket.emit("chatHistory", history);
   });
 
-  socket.on("chatMessage", ({ postId, senderId, receiverId, content }) => {
+  socket.on("chatMessage", async ({ postId, senderId, receiverId, content }) => {
     if (!content?.trim()) {
       return;
     }
-    const post = getPostById(postId);
+    const post = await getPostById(postId);
     if (!post) return;
 
-    const message = addMessage({
+    const message = await addMessage({
       postId,
       senderId,
       receiverId,
       content: content.trim()
     });
 
-    io.to(postId).emit("chatMessage", enrichMessage(message));
+    io.to(postId).emit("chatMessage", await enrichMessage(message));
   });
 });
 
-// 서버가 다시 켜졌을 때 이전에 잡아둔 약속도 다시 예약해 둡니다.
-const snapshot = getStateSnapshot();
-snapshot.appointments?.forEach((appointment) => {
-  scheduleAppointmentReminder({ appointment, io });
-});
-
 const PORT = process.env.PORT || 4000;
-httpServer.listen(PORT, () => {
-  console.log(`서버가 실행 중입니다: http://localhost:${PORT}`);
-});
+async function bootstrap() {
+  const appointments = await getAppointments();
+  appointments.forEach((appointment) => {
+    scheduleAppointmentReminder({ appointment, io });
+  });
 
+  httpServer.listen(PORT, () => {
+    console.log(`서버가 실행 중입니다: http://localhost:${PORT}`);
+  });
+}
+
+bootstrap().catch((error) => {
+  console.error("서버 초기화 실패:", error);
+  process.exit(1);
+});
