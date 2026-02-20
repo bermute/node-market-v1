@@ -69,11 +69,9 @@ app.get("/health", (_req, res) => res.json({ ok: true }));
 
 async function enrichMessage(message) {
   const sender = await getUserById(message.senderId);
-  const receiver = await getUserById(message.receiverId);
   return {
     ...message,
-    senderName: sender?.name || message.senderId,
-    receiverName: receiver?.name || message.receiverId
+    senderName: sender?.name || message.senderId
   };
 }
 
@@ -86,7 +84,7 @@ io.on("connection", (socket) => {
     socket.emit("chatHistory", history);
   });
 
-  socket.on("chatMessage", async ({ postId, senderId, receiverId, content }) => {
+  socket.on("chatMessage", async ({ postId, senderId, content }) => {
     if (!content?.trim()) {
       return;
     }
@@ -96,7 +94,6 @@ io.on("connection", (socket) => {
     const message = await addMessage({
       postId,
       senderId,
-      receiverId,
       content: content.trim()
     });
 

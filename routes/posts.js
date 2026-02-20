@@ -5,7 +5,6 @@ const {
   getPosts,
   getPostById,
   addPost,
-  updatePost,
   deletePost
 } = require("../models/postModel");
 const {
@@ -31,7 +30,6 @@ function createPostsRouter(upload) {
       return res.redirect("/login");
     }
 
-    res.locals.request = req;
     const currentUser = await getUserById(req.session.userId);
     if (!currentUser) {
       return res.redirect("/login");
@@ -44,7 +42,7 @@ function createPostsRouter(upload) {
   });
 
   // 메인 리스트 페이지
-  router.get("/", async (req, res) => {
+  router.get("/", async (_req, res) => {
     const posts = await getPosts();
     res.render("index", {
       posts
@@ -52,7 +50,7 @@ function createPostsRouter(upload) {
   });
 
   // 판매글 작성 화면
-  router.get("/posts/new", async (req, res) => {
+  router.get("/posts/new", async (_req, res) => {
     const currentUser = await getUserById(res.locals.currentUserId);
     res.render("post_new", {
       defaultLocation: currentUser?.address || ""
@@ -68,14 +66,13 @@ function createPostsRouter(upload) {
     const filePath = req.file ? `/uploads/${path.basename(req.file.path)}` : DEFAULT_IMAGE;
 
     const newPost = {
-
       title,
       description,
       price: Number(price) || 0,
       imageUrl: filePath,
       sellerId: seller.id,
       location: sanitizedLocation,
-      status: "판매중",
+      status: "판매중"
     };
 
     await addPost(newPost);
@@ -86,11 +83,9 @@ function createPostsRouter(upload) {
   async function enrichMessages(messages = []) {
     return Promise.all(messages.map(async (msg) => {
       const sender = await getUserById(msg.senderId);
-      const receiver = await getUserById(msg.receiverId);
       return {
         ...msg,
-        senderName: sender?.name || msg.senderId,
-        receiverName: receiver?.name || msg.receiverId
+        senderName: sender?.name || msg.senderId
       };
     }));
   }
@@ -101,16 +96,24 @@ function createPostsRouter(upload) {
     if (!post) {
       return res.status(404).render("404", { message: "게시글을 찾을 수 없습니다." });
     }
+    const rawMessages = await getMessagesByPost(post.id);
+    const participantIds = new Set(
+      rawMessages
+        .map((msg) => Number(msg.senderId))
+        .filter((senderId) => senderId !== Number(post.sellerId))
+    );
+    const chatParticipants = (res.locals.users || []).filter((user) => participantIds.has(Number(user.id)));
 
     res.render("post_show", {
       post,
-      messages: await enrichMessages(await getMessagesByPost(post.id)),
+      messages: await enrichMessages(rawMessages),
+      chatParticipants,
       appointment: await getAppointmentByPost(post.id),
       errorMessage: req.query.error || null
     });
   });
 
-  router.post("/posts/:id/delete",async (req, res) => {
+  router.post("/posts/:id/delete", async (req, res) => {
     const post = await getPostById(req.params.id);
     const currentUser = res.locals.currentUserId;
     if (!post) {

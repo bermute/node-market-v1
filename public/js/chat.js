@@ -3,6 +3,7 @@
   const socket = io();
   const chatLog = document.getElementById("chatMessages");
   const chatForm = document.getElementById("chatForm");
+  const sellerId = chatLog?.dataset?.sellerId;
 
   const postId = window.App?.currentPostId;
   if (!postId || !chatLog) {
@@ -20,7 +21,8 @@
     if (isSystem) {
       wrapper.innerHTML = `<p>${message.content}</p>`;
     } else {
-      const senderLabel = message.senderName || message.senderId;
+      const isSeller = String(message.senderId) === String(sellerId);
+      const senderLabel = `${message.senderName || message.senderId}${isSeller ? " (판매자)" : ""}`;
       wrapper.innerHTML = `
         <p class="sender">${senderLabel}</p>
         <p>${message.content}</p>
@@ -54,10 +56,8 @@
     socket.emit("chatMessage", {
       postId,
       senderId: formData.get("senderId"),
-      receiverId: formData.get("receiverId"),
       content
     });
     chatForm.reset();
   });
 })();
-

@@ -2,7 +2,6 @@
   <section class="form-shell">
     <h2>새 판매글 작성</h2>
     <form action="/posts" method="POST" enctype="multipart/form-data" id="postForm">
-      <input type="hidden" name="sellerId" value="<%= currentUserId %>" />
       <div class="form-field">
         <label for="image">상품 사진</label>
         <input type="file" id="image" name="image" accept="image/*" />
@@ -51,5 +50,4 @@
   renderBody,
   pageTitle: "판매글 작성"
 }) %>
-
 

@@ -19,15 +19,18 @@ function createAuthRouter() {
   });
 
   router.post("/login", async (req, res) => {
-    const { username, password } = req.body;
+    const { userId, password } = req.body;
 
-    if (!username || !password) {
+    if (!userId || !password) {
       return res.status(400).render("login", {
         errorMessage: "아이디와 비밀번호를 입력해 주세요."
       });
     }
 
-    const user = await authenticateUser({ username, password });
+    const user = await authenticateUser({
+      userId: userId.trim(),
+      password
+    });
     if (!user) {
       return res.status(401).render("login", {
         errorMessage: "아이디 또는 비밀번호가 올바르지 않습니다."
@@ -50,25 +53,19 @@ function createAuthRouter() {
   });
 
   router.post("/signup", async (req, res) => {
-    const { username, password, name, address } = req.body;
+    const { userId, name, password, address } = req.body;
 
-    if (!username || !password || !name || !address) {
+    if (!userId || !name || !password || !address) {
       return res.status(400).render("signup", {
         errorMessage: "모든 항목을 입력해 주세요."
       });
     }
 
-    if (password.length < 6) {
-      return res.status(400).render("signup", {
-        errorMessage: "비밀번호는 6자 이상이어야 합니다."
-      });
-    }
-
     try {
       const user = await createUserWithCredentials({
-        username: username.trim(),
-        password,
+        userId: userId.trim(),
         name: name.trim(),
+        password,
         address: address.trim()
       });
 
@@ -81,7 +78,7 @@ function createAuthRouter() {
     } catch (error) {
       if (error?.code === "ER_DUP_ENTRY") {
         return res.status(409).render("signup", {
-          errorMessage: "이미 사용 중인 아이디입니다."
+          errorMessage: "이미 사용 중인 아이디(userId)입니다."
         });
       }
 

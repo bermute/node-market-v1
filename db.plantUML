@@ -1,61 +1,65 @@
 @startuml
-' =========================
-' Users Table
-' =========================
+' ===============================
+' Users
+' ===============================
 entity users {
-  + id : INT <<PK>>
+  +id : INT <<PK>>
   --
   name : VARCHAR(50)
   address : VARCHAR(255)
+  userId : VARCHAR(50) <<UNIQUE>>
+  password : VARCHAR(255)
 }
 
-' =========================
-' Posts Table
-' =========================
+' ===============================
+' Posts
+' ===============================
 entity posts {
-  + id : INT <<PK>>
+  +id : INT <<PK>>
   --
   title : VARCHAR(255)
   description : TEXT
   price : INT
   imageUrl : VARCHAR(255)
-  sellerId : INT <<FK>>
   location : VARCHAR(255)
   status : VARCHAR(20)
   createdAt : DATETIME
+  sellerId : INT <<FK>>
 }
 
-' =========================
-' Messages Table
-' =========================
+' ===============================
+' Messages
+' ===============================
 entity messages {
-  + id : INT <<PK>>
+  +id : INT <<PK>>
   --
-  postId : INT <<FK>>
-  senderId : INT <<FK>>
   content : TEXT
   createdAt : DATETIME
+  senderId : INT <<FK>>
+  postId : INT <<FK>>
 }
 
-' =========================
-' Appointments Table
-' =========================
+' ===============================
+' Appointments
+' ===============================
 entity appointments {
-  + postId : INT <<PK, FK>>
+  +postId : INT <<PK, FK>>
   --
-  buyerId : INT <<FK>>
   createdAt : DATETIME
   cancelRequestedBy : INT <<FK>>
+  buyerId : INT <<FK>>
 }
 
-' =========================
+' ===============================
 ' Relationships
-' =========================
+' ===============================
 
 users ||--o{ posts : sells
 users ||--o{ messages : sends
+users ||--o{ appointments : buyer
+users ||--o{ appointments : cancelRequester
+
 posts ||--o{ messages : has
 posts ||--|| appointments : reserved
-users ||--o{ appointments : buys
 
 @enduml

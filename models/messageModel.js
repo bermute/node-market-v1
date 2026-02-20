@@ -10,9 +10,9 @@ async function getMessagesByPost(postId) {
 
 async function addMessage(data) {
   const [result] = await pool.query(
-    `INSERT INTO messages (postId, senderId, receiverId, content)
-     VALUES (?, ?, ?, ?)`,
-    [data.postId, data.senderId, data.receiverId, data.content]
+    `INSERT INTO messages (postId, senderId, content)
+     VALUES (?, ?, ?)`,
+    [data.postId, data.senderId, data.content]
   );
 
   const [rows] = await pool.query("SELECT * FROM messages WHERE id = ?", [result.insertId]);

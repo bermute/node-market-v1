@@ -5,17 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title><%= typeof pageTitle !== "undefined" ? pageTitle : "중고거래 도우미" %></title>
   <link rel="stylesheet" href="/css/styles.css" />
-  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 </head>
 <body>
   <div id="notification-banner" class="notification-banner hidden"></div>
   <header class="site-header">
     <div>
       <h1><a href="/">중고거래 판매글·채팅·약속잡기</a></h1>
-      <p class="subtitle">Node.js + OpenAI 실습용 미니 서비스</p>
     </div>
     <div class="header-auth">
-      <% if (authUser) { %>
+      <% if (typeof authUser !== "undefined" && authUser) { %>
         <span class="welcome-text"><%= authUser.name %>님</span>
         <a href="/posts/new" class="btn primary">판매글 올리기</a>
         <form method="POST" action="/logout" class="inline-form">
@@ -36,9 +34,8 @@
 
   <script>
     window.App = {
-      currentUserId: "<%= currentUserId || '' %>",
-      currentPostId: "<%= typeof post !== "undefined" && post ? post.id : "" %>",
-      sellerId: "<%= typeof post !== "undefined" && post ? post.sellerId : "" %>"
+      currentUserId: "<%= typeof currentUserId !== 'undefined' ? currentUserId : '' %>",
+      currentPostId: "<%= typeof post !== "undefined" && post ? post.id : "" %>"
     };
   </script>
   <script src="/socket.io/socket.io.js"></script>
@@ -48,5 +45,3 @@
   <script src="/js/schedule.js"></script>
 </body>
 </html>
-
-

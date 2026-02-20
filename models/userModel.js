@@ -1,46 +1,25 @@
 const pool = require("../data/db");
-const crypto = require("crypto");
+const bcrypt = require("bcrypt");
 
-let authTableInitPromise;
+const SALT_ROUNDS = 10;
 
-function ensureAuthTable() {
-  if (!authTableInitPromise) {
-    authTableInitPromise = pool.query(`
-      CREATE TABLE IF NOT EXISTS user_auth (
-        userId INT PRIMARY KEY,
-        username VARCHAR(50) NOT NULL UNIQUE,
-        passwordHash VARCHAR(255) NOT NULL,
-        createdAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_user_auth_user
-          FOREIGN KEY (userId) REFERENCES users(id)
-          ON DELETE CASCADE
-      )
-    `);
+let loginIdColumnPromise;
+
+async function getLoginIdColumn() {
+  if (!loginIdColumnPromise) {
+    loginIdColumnPromise = (async () => {
+      const [rows] = await pool.query("SHOW COLUMNS FROM users");
+      const columns = new Set(rows.map((row) => row.Field));
+      if (columns.has("userId")) {
+        return "userId";
+      }
+      if (columns.has("username")) {
+        return "username";
+      }
+      throw new Error("users 테이블에 userId 또는 username 컬럼이 필요합니다.");
+    })();
   }
-  return authTableInitPromise;
-}
-
-function hashPassword(password) {
-  const salt = crypto.randomBytes(16).toString("hex");
-  const hash = crypto.scryptSync(password, salt, 64).toString("hex");
-  return `${salt}:${hash}`;
-}
-
-function verifyPassword(password, passwordHash) {
-  const [salt, expectedHash] = String(passwordHash || "").split(":");
-  if (!salt || !expectedHash) {
-    return false;
-  }
-
-  const actualHash = crypto.scryptSync(password, salt, 64).toString("hex");
-  const expectedBuffer = Buffer.from(expectedHash, "hex");
-  const actualBuffer = Buffer.from(actualHash, "hex");
-
-  if (expectedBuffer.length !== actualBuffer.length) {
-    return false;
-  }
-
-  return crypto.timingSafeEqual(expectedBuffer, actualBuffer);
+  return loginIdColumnPromise;
 }
 
 async function getUsers() {
@@ -56,59 +35,33 @@ async function getUserById(id) {
   return rows[0];
 }
 
-async function createUserWithCredentials({ username, password, name, address }) {
-  await ensureAuthTable();
-
-  const connection = await pool.getConnection();
-  try {
-    await connection.beginTransaction();
-
-    const [userResult] = await connection.query(
-      "INSERT INTO users (name, address) VALUES (?, ?)",
-      [name, address]
-    );
-
-    const passwordHash = hashPassword(password);
-    await connection.query(
-      "INSERT INTO user_auth (userId, username, passwordHash) VALUES (?, ?, ?)",
-      [userResult.insertId, username, passwordHash]
-    );
-
-    await connection.commit();
-    return await getUserById(userResult.insertId);
-  } catch (error) {
-    await connection.rollback();
-    throw error;
-  } finally {
-    connection.release();
-  }
+async function createUserWithCredentials({ userId, name, address, password }) {
+  const loginIdColumn = await getLoginIdColumn();
+  const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
+  const [result] = await pool.query(
+    `INSERT INTO users (name, address, ${loginIdColumn}, password) VALUES (?, ?, ?, ?)`,
+    [name, address, userId, hashedPassword]
+  );
+  return await getUserById(result.insertId);
 }
 
-async function authenticateUser({ username, password }) {
-  await ensureAuthTable();
-
+async function authenticateUser({ userId, password }) {
+  const loginIdColumn = await getLoginIdColumn();
   const [rows] = await pool.query(
-    `SELECT u.id, u.name, u.address, ua.passwordHash
-     FROM user_auth ua
-     INNER JOIN users u ON u.id = ua.userId
-     WHERE ua.username = ?`,
-    [username]
+    `SELECT id, name, address, password FROM users WHERE ${loginIdColumn} = ?`,
+    [userId]
   );
 
-  const record = rows[0];
-  if (!record) {
+  const user = rows[0];
+  if (!user) {
     return null;
   }
-
-  if (!verifyPassword(password, record.passwordHash)) {
+  const isPasswordValid = await bcrypt.compare(password, user.password);
+  if (!isPasswordValid) {
     return null;
   }
-
-  return {
-    id: record.id,
-    name: record.name,
-    address: record.address
-  };
+  const { password: _password, ...safeUser } = user;
+  return safeUser;
 }
 
 module.exports = {

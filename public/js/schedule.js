@@ -115,9 +115,6 @@
     if (!appointmentInfo) return;
     if (!appointment) {
       appointmentInfo.innerHTML = "<p>등록된 약속이 없습니다.</p>";
-      appointmentInfo.dataset.hasAppointment = "false";
-      appointmentInfo.dataset.cancelRequestedBy = "";
-      appointmentInfo.dataset.isParticipant = "false";
       return;
     }
 
@@ -126,9 +123,6 @@
       : appointment.datetime;
 
     const isParticipant = appointment.sellerId === currentUserId || appointment.buyerId === currentUserId;
-    appointmentInfo.dataset.hasAppointment = "true";
-    appointmentInfo.dataset.cancelRequestedBy = appointment.cancelRequestedBy || "";
-    appointmentInfo.dataset.isParticipant = isParticipant ? "true" : "false";
 
     let extraHtml = "";
     if (isParticipant) {
@@ -154,4 +148,3 @@
     bindCancelButtons();
   }
 })();
-

@@ -79,15 +79,13 @@ function createApiRouter(io) {
     }
 
     const appointment = await addAppointment({
-      id: randomUUID(),
       postId: post.id,
       buyerId,
-      sellerId: post.sellerId,
       datetime: `${date}T${time}`,
       place
     });
 
-    await updatePost(post.id, { status: "예약중", appointmentId: appointment.id });
+    await updatePost(post.id, { status: "예약중", appointmentId: appointment.postId });
 
     scheduleAppointmentReminder({ appointment, io });
 

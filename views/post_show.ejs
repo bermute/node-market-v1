@@ -1,5 +1,3 @@
-<% const otherUser = (users || []).find((user) => user.id !== currentUserId); %>
-<% const defaultReceiverId = currentUserId === post.sellerId ? (otherUser?.id || currentUserId) : post.sellerId; %>
 <% const renderBody = () => { %>
   <section class="post-detail">
     <div class="detail-actions">
@@ -18,7 +16,7 @@
       <div>
         <span class="badge <%= post.status %>"><%= post.status %></span>
         <h2><%= post.title %></h2>
-        <p class="price big"><%= post.price.toLocaleString() %> 원</p>
+        <p class="price big"><%= Number(post.price || 0).toLocaleString() %> 원</p>
         <p class="meta">거래 지역: <%= post.location %></p>
         <p class="meta">등록일: <%= dayjs(post.createdAt).format("YYYY-MM-DD HH:mm") %></p>
         <p class="description"><%= post.description %></p>
@@ -30,11 +28,11 @@
         <div class="panel__header">
           <h3>채팅</h3>
         </div>
-        <div id="chatMessages" class="chat-log" data-post-id="<%= post.id %>" data-seller-id="<%= post.sellerId %>">
+        <div id="chatMessages" class="chat-log" data-seller-id="<%= post.sellerId %>">
           <% if (messages && messages.length > 0) { %>
             <% messages.forEach((msg) => { %>
               <div class="chat-message <%= msg.senderId === currentUserId ? "me" : "" %>">
-                <p class="sender"><%= msg.senderName || msg.senderId %></p>
+                <p class="sender"><%= `${msg.senderName || msg.senderId}${msg.senderId === post.sellerId ? " (판매자)" : ""}` %></p>
                 <p><%= msg.content %></p>
                 <small><%= dayjs(msg.createdAt).format("HH:mm") %></small>
               </div>
@@ -46,7 +44,6 @@
         <form id="chatForm" class="chat-form">
           <input type="hidden" name="postId" value="<%= post.id %>">
           <input type="hidden" name="senderId" value="<%= currentUserId %>">
-          <input type="hidden" name="receiverId" value="<%= defaultReceiverId %>">
           <input type="text" name="content" placeholder="메시지를 입력하세요" required />
           <button type="submit" class="btn primary">전송</button>
         </form>
@@ -63,10 +60,7 @@
         <% } %>
 
         <% const isAppointmentParticipant = appointment && (appointment.sellerId === currentUserId || appointment.buyerId === currentUserId); %>
-        <div class="appointment-info"
-             data-has-appointment="<%= appointment ? "true" : "false" %>"
-             data-cancel-requested-by="<%= appointment?.cancelRequestedBy || "" %>"
-             data-is-participant="<%= isAppointmentParticipant ? "true" : "false" %>">
+        <div class="appointment-info">
           <% if (appointment) { %>
             <p><strong>약속 일시:</strong> <%= dayjs(appointment.datetime).format("YYYY-MM-DD HH:mm") %></p>
             <p><strong>장소:</strong> <%= appointment.place %></p>
@@ -92,14 +86,18 @@
   <div class="modal" id="scheduleModal">
     <div class="modal__content">
       <h3>약속잡기</h3>
+      <% const hasChatParticipants = (chatParticipants || []).length > 0; %>
       <form id="appointmentForm" data-post-id="<%= post.id %>">
-        <input type="hidden" name="sellerId" value="<%= post.sellerId %>">
         <div class="form-field">
           <label for="buyerId">구매자 선택</label>
-          <select name="buyerId" id="buyerId">
-            <% (users || []).filter((user) => user.id !== post.sellerId).forEach((user) => { %>
-              <option value="<%= user.id %>"><%= user.name %> (<%= user.address %>)</option>
-            <% }) %>
+          <select name="buyerId" id="buyerId" <%= hasChatParticipants ? "" : "disabled" %>>
+            <% if (!hasChatParticipants) { %>
+              <option value="" selected>대화상대 없음</option>
+            <% } else { %>
+              <% (chatParticipants || []).forEach((user) => { %>
+                <option value="<%= user.id %>"><%= user.name %> (<%= user.address %>)</option>
+              <% }) %>
+            <% } %>
           </select>
         </div>
         <div class="form-field">
@@ -116,7 +114,7 @@
         </div>
         <div class="modal__actions">
           <button class="btn secondary" data-action="close" type="button">취소</button>
-          <button class="btn primary" type="submit">등록</button>
+          <button class="btn primary" type="submit" <%= hasChatParticipants ? "" : "disabled" %>>등록</button>
         </div>
       </form>
     </div>

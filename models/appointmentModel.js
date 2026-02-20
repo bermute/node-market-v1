@@ -15,13 +15,11 @@ async function getAppointmentByPost(postId) {
 
 async function addAppointment(data) {
   await pool.query(
-    `INSERT INTO appointments (id, postId, buyerId, sellerId, datetime, place)
-     VALUES (?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO appointments (postId, buyerId, datetime, place)
+     VALUES (?, ?, ?, ?)`,
     [
-      data.id,
       data.postId,
       data.buyerId,
-      data.sellerId,
       data.datetime,
       data.place
     ]
