@@ -12,7 +12,7 @@ Node.js + Express + EJS + Mysql + socket.io + OpenAI 로 구현한 과제형 웹
    `npm run dev` (또는 `npm start`)
 4. 브라우저에서 `http://localhost:4000` 접속
 
-## 환경 변수
+## 환경 변수 
 
 | 이름 | 설명 |
 | --- | --- |
