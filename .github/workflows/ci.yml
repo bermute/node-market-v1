@@ -21,7 +21,7 @@ jobs:
         run: npm install
 
       - name: 문법 체크 (Node 실행 테스트)
-        run: node -e "require('./app')"
+        run: node -e "require('./server')"
 
       # 테스트가 있다면 활성화
       # - name: 테스트 실행
