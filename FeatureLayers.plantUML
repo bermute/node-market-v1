@@ -1,0 +1,73 @@
+@startuml
+skinparam shadowing false
+skinparam rectangleStyle rounded
+skinparam packageStyle rectangle
+
+title 주요 기능 계층도 (nodejs-market-main)
+
+actor "사용자" as User
+
+package "1) 프레젠테이션 계층" as L1 {
+  component "EJS Views\nviews/*.ejs" as Views
+  component "Client JS\nmain/chat/schedule/ai-helper" as ClientJS
+}
+
+package "2) 라우팅/인터페이스 계층" as L2 {
+  component "Auth Router\nroutes/auth.js" as AuthRouter
+  component "Posts Router\nroutes/posts.js" as PostsRouter
+  component "API Router\nroutes/api.js" as ApiRouter
+}
+
+package "3) 실시간 통신 계층" as L3 {
+  component "Socket.IO Handlers\nserver.js" as SocketLayer
+}
+
+package "4) 서비스 계층" as L4 {
+  component "Session Service\nservices/sessionService.js" as SessionSvc
+  component "Notification Service\nservices/notificationService.js" as NotiSvc
+  component "AI Service\nservices/aiService.js" as AiSvc
+}
+
+package "5) 데이터 접근 계층" as L5 {
+  component "User Model\nmodels/userModel.js" as UserModel
+  component "Post Model\nmodels/postModel.js" as PostModel
+  component "Message Model\nmodels/messageModel.js" as MessageModel
+  component "Appointment Model\nmodels/appointmentModel.js" as AppointmentModel
+}
+
+package "6) 인프라 계층" as L6 {
+  database "MySQL\nusers/posts/messages/appointments" as MySQL
+  component "DB Pool\ndata/db.js" as DbPool
+  cloud "OpenAI API" as OpenAI
+}
+
+User --> Views : 페이지 사용
+User --> ClientJS : 입력/이벤트
+
+Views --> AuthRouter
+Views --> PostsRouter
+ClientJS --> ApiRouter : REST 호출
+ClientJS --> SocketLayer : WebSocket
+
+AuthRouter --> SessionSvc
+PostsRouter --> UserModel
+PostsRouter --> PostModel
+PostsRouter --> MessageModel
+PostsRouter --> AppointmentModel
+ApiRouter --> PostModel
+ApiRouter --> AppointmentModel
+ApiRouter --> AiSvc
+ApiRouter --> NotiSvc
+SocketLayer --> MessageModel
+SocketLayer --> UserModel
+SocketLayer --> NotiSvc
+
+UserModel --> DbPool
+PostModel --> DbPool
+MessageModel --> DbPool
+AppointmentModel --> DbPool
+DbPool --> MySQL
+
+AiSvc --> OpenAI
+
+@enduml

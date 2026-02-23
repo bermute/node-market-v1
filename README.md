@@ -12,7 +12,7 @@ Node.js + Express + EJS + Mysql + socket.io + OpenAI 로 구현한 과제형 웹
    `npm run dev` (또는 `npm start`)
 4. 브라우저에서 `http://localhost:4000` 접속
 
-## 환경 변수
+## 환경 변수 
 
 | 이름 | 설명 |
 | --- | --- |
@@ -23,20 +23,22 @@ Node.js + Express + EJS + Mysql + socket.io + OpenAI 로 구현한 과제형 웹
 
 ```bash
 c:\newProject
-├─server.js                # Express + socket.io 엔트리
-├─routes
-│   ├─posts.js             # 화면 라우트 (리스트/작성/상세)
-│   └─api.js               # AI, 약속 관련 REST API
+├─server.js                  # Express + socket.io 엔트리
+├─routes  
+│   ├─auth.js                # 인증 라우트
+│   ├─posts.js               # 화면 라우트 (리스트/작성/상세)
+│   └─api.js                 # AI, 약속 관련 REST API
 ├─services
-│   ├─aiService.js         # OpenAI 호출 래퍼
+│   ├─sessionService.js      # 로그인 세션 로직 
+│   ├─aiService.js           # OpenAI 호출 래퍼
 │   └─notificationService.js # 약속 알림 예약
 ├─data
-│   └─db.js                # Mysql 연결 
-├─views                    # EJS 뷰 
+│   └─db.js                  # Mysql 연결 
+├─views                      # EJS 뷰 
 └─public
-   ├─css/styles.css       # 기본 스타일
-   ├─js                   # main / ai-helper / chat / schedule
-   └─uploads              # 이미지 스토리지로 사용 
+   ├─css/styles.css          # 기본 스타일
+   ├─js                      # main / ai-helper / chat / schedule
+   └─uploads                 # 이미지 스토리지로 사용 
 ```
 
 ## 주요 기능

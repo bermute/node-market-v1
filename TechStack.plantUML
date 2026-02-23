@@ -1,0 +1,57 @@
+@startuml
+skinparam shadowing false
+skinparam rectangleStyle rounded
+skinparam componentStyle rectangle
+skinparam packageStyle rectangle
+
+title nodejs-market-main 기술 구성도
+
+actor "사용자" as User
+
+package "Frontend (Browser)" as FE {
+  component "EJS View\n(SSR HTML)" as EJS
+  component "Client JS\nmain.js / chat.js / schedule.js / ai-helper.js" as ClientJS
+  component "Socket.IO Client" as SocketClient
+}
+
+package "Backend (Node.js)" as BE {
+  component "Express App\nserver.js" as ExpressApp
+  component "Auth Routes\nroutes/auth.js" as AuthRoute
+  component "Post Routes\nroutes/posts.js" as PostRoute
+  component "API Routes\nroutes/api.js" as ApiRoute
+  component "Socket.IO Server" as SocketServer
+
+  component "Session Service\nservices/sessionService.js" as SessionService
+  component "Notification Service\nservices/notificationService.js" as NotiService
+  component "AI Service\nservices/aiService.js" as AiService
+
+  component "Models\nuser/post/message/appointment" as Models
+}
+
+database "MySQL\nusers, posts, messages, appointments" as MySQL
+cloud "OpenAI API" as OpenAI
+
+User --> EJS : 페이지 접속/조회
+User --> ClientJS : 채팅/약속/AI 작성 사용
+
+EJS --> ExpressApp : HTTP GET/POST
+ClientJS --> ExpressApp : REST API 호출
+SocketClient --> SocketServer : WebSocket 연결
+
+ExpressApp --> AuthRoute
+ExpressApp --> PostRoute
+ExpressApp --> ApiRoute
+ExpressApp --> SocketServer
+
+AuthRoute --> SessionService
+PostRoute --> Models
+ApiRoute --> Models
+ApiRoute --> NotiService
+ApiRoute --> AiService
+SocketServer --> Models
+SocketServer --> NotiService
+
+Models --> MySQL : CRUD
+AiService --> OpenAI : 설명 생성 요청
+
+@enduml
