@@ -21,7 +21,7 @@ Node.js + Express + EJS + Mysql + socket.io + OpenAI 로 구현한 과제형 웹
 
 ## 폴더 구조
 
-```
+
 c:\newProject
 ├─server.js                # Express + socket.io 엔트리
 ├─routes
