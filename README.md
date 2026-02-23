@@ -38,6 +38,7 @@ c:\newProject
    ├─js                   # main / ai-helper / chat / schedule
    └─uploads              # 이미지 스토리지로 사용 
 
+
 ## 주요 기능
 
 - **판매글 리스트/상세/작성**: 파일 업로드 + 기본 폼
