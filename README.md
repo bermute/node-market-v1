@@ -21,7 +21,7 @@ Node.js + Express + EJS + Mysql + socket.io + OpenAI 로 구현한 과제형 웹
 
 ## 폴더 구조
 
-
+```bash
 c:\newProject
 ├─server.js                # Express + socket.io 엔트리
 ├─routes
@@ -37,7 +37,7 @@ c:\newProject
    ├─css/styles.css       # 기본 스타일
    ├─js                   # main / ai-helper / chat / schedule
    └─uploads              # 이미지 스토리지로 사용 
-
+```
 
 ## 주요 기능
 
