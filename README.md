@@ -1,6 +1,6 @@
 # 중고거래 판매글·채팅·약속잡기 도우미
 
-Node.js + Express + EJS + socket.io + OpenAI 로 구현한 과제형 웹앱입니다. 판매글 작성 → AI 자동 설명 → 실시간 채팅 → 약속잡기 → 알림까지 한 번에 체험할 수 있습니다.
+Node.js + Express + EJS + Mysql + socket.io + OpenAI 로 구현한 과제형 웹앱입니다. 판매글 작성 → AI 자동 설명 → 실시간 채팅 → 약속잡기 → 알림까지 한 번에 체험할 수 있습니다.
 
 ## 실행 방법
 
@@ -31,15 +31,12 @@ c:\newProject
 │   ├─aiService.js         # OpenAI 호출 래퍼
 │   └─notificationService.js # 약속 알림 예약
 ├─data
-│   ├─db.js                # in-memory + JSON 저장소
-│   └─storage.json         # 초기 더미 데이터
-├─views                    # EJS 뷰 (layout/index/post_new/post_show/404)
-├─public
-│   ├─css/styles.css       # 기본 스타일
-│   ├─js                   # main / ai-helper / chat / schedule
-│   └─uploads              # 업로드 및 샘플 이미지
-└─docs/PRD.md              # 요구사항 문서 (제공됨)
-```
+│   └─db.js                # Mysql 연결 
+├─views                    # EJS 뷰 
+└─public
+   ├─css/styles.css       # 기본 스타일
+   ├─js                   # main / ai-helper / chat / schedule
+   └─uploads              # 이미지 스토리지로 사용 
 
 ## 주요 기능
 
@@ -47,6 +44,6 @@ c:\newProject
 - **AI 판매글 초안**: 사진 업로드 시 모달 → `/api/ai/generate-post`
 - **실시간 채팅**: 게시글 ID 별 socket.io 룸 연결
 - **약속잡기 + 알림**: 예약 등록 → 상태 `예약중` → setTimeout 으로 알림 브로드캐스트
-- **데이터 저장**: `data/storage.json` 에 간단히 영속화 (서버 재시작 시 로드)
+- **데이터 저장**: `mysql` 에 post ,user , appointment , message 저장
 
 
