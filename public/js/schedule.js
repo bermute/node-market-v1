@@ -118,17 +118,22 @@
       return;
     }
 
-    const datetimeText = appointment.datetime.includes("T")
-      ? appointment.datetime.replace("T", " ")
-      : appointment.datetime;
+    const rawDatetime = appointment.datetime ? String(appointment.datetime) : "시간 미정";
+    const datetimeText = rawDatetime.includes("T")
+      ? rawDatetime.replace("T", " ")
+      : rawDatetime;
+    const placeText = appointment.place || "장소 미정";
+    const sellerName = appointment.sellerName || appointment.sellerId;
+    const buyerName = appointment.buyerName || appointment.buyerId;
 
-    const isParticipant = appointment.sellerId === currentUserId || appointment.buyerId === currentUserId;
+    const isParticipant = Number(appointment.sellerId) === Number(currentUserId)
+      || Number(appointment.buyerId) === Number(currentUserId);
 
     let extraHtml = "";
     if (isParticipant) {
-      if (appointment.cancelRequestedBy && appointment.cancelRequestedBy === currentUserId) {
+      if (appointment.cancelRequestedBy && Number(appointment.cancelRequestedBy) === Number(currentUserId)) {
         extraHtml = `<p class="notice">상대방의 철회 동의를 기다리는 중입니다.</p>`;
-      } else if (appointment.cancelRequestedBy && appointment.cancelRequestedBy !== currentUserId) {
+      } else if (appointment.cancelRequestedBy && Number(appointment.cancelRequestedBy) !== Number(currentUserId)) {
         extraHtml = `
           <p class="notice">상대방이 약속 철회를 요청했습니다. 동의하면 예약이 취소됩니다.</p>
           <button class="btn secondary" id="approveCancelBtn">철회 동의하기</button>
@@ -140,8 +145,8 @@
 
     appointmentInfo.innerHTML = `
       <p><strong>약속 일시:</strong> ${datetimeText}</p>
-      <p><strong>장소:</strong> ${appointment.place}</p>
-      <p><strong>참여자:</strong> 판매자(${appointment.sellerId}) / 구매자(${appointment.buyerId})</p>
+      <p><strong>장소:</strong> ${placeText}</p>
+      <p><strong>참여자:</strong> 판매자(${sellerName}) / 구매자(${buyerName})</p>
       ${extraHtml}
     `;
 

@@ -13,10 +13,17 @@ function clearAppointmentReminder(postId) {
 
 // 약속 시간이 되면 채팅방에 시스템 메시지를 보내도록 예약합니다.
 function scheduleAppointmentReminder({ appointment, io }) {
+  if (!appointment?.postId || !appointment?.datetime) {
+    return;
+  }
+
   clearAppointmentReminder(appointment.postId);
 
   const now = dayjs();
   const target = dayjs(appointment.datetime);
+  if (!target.isValid()) {
+    return;
+  }
   const delay = Math.max(target.diff(now, "millisecond"), 0);
 
   const timeoutId = setTimeout(() => {
@@ -34,4 +41,3 @@ module.exports = {
   scheduleAppointmentReminder,
   clearAppointmentReminder
 };
-

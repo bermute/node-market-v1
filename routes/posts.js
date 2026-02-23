@@ -123,8 +123,8 @@ function createPostsRouter(upload) {
       return res.status(403).render("404", { message: "삭제 권한이 없습니다." });
     }
     const appointment = await getAppointmentByPost(post.id);
-    if (post.status === "예약중" && appointment) {
-      return res.redirect(`/posts/${post.id}?error=예약을 먼저 철회해야 삭제할 수 있습니다.`);
+    if (appointment) {
+      return res.redirect(`/posts/${post.id}?error=약속철회후 다시 시도해 주세요`);
     }
 
     await deletePost(post.id);

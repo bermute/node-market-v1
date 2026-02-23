@@ -1,5 +1,4 @@
 const express = require("express");
-const { randomUUID } = require("crypto");
 const {  
   getPostById,
   updatePost
@@ -68,33 +67,48 @@ function createApiRouter(io) {
 
   // 약속 등록
   router.post("/posts/:id/appointment", async (req, res) => {
-    const post = await getPostById(req.params.id);
-    if (!post) {
-      return res.status(404).json({ success: false, message: "게시글이 없습니다." });
+    try {
+      const post = await getPostById(req.params.id);
+      if (!post) {
+        return res.status(404).json({ success: false, message: "게시글이 없습니다." });
+      }
+      const existingAppointment = await getAppointmentByPost(post.id);
+      if (existingAppointment) {
+        return res.status(409).json({ success: false, message: "이미 약속이 등록되어있습니다." });
+      }
+
+      const { buyerId, date, time, place } = req.body;
+      if (!buyerId || !date || !time || !place) {
+        return res.status(400).json({ success: false, message: "모든 필드를 입력해 주세요." });
+      }
+
+      const appointment = await addAppointment({
+        postId: post.id,
+        buyerId,
+        sellerId: post.sellerId,
+        datetime: `${date}T${time}`,
+        place
+      });
+
+      await updatePost(post.id, { status: "예약중" });
+
+      scheduleAppointmentReminder({ appointment, io });
+
+      const datetimeLabel = appointment?.datetime ? String(appointment.datetime).replace("T", " ") : "시간 미정";
+      const placeLabel = appointment?.place || "장소 미정";
+      io.to(post.id).emit("systemMessage", {
+        type: "appointment",
+        content: `약속이 등록되었습니다: ${datetimeLabel} @ ${placeLabel}`
+      });
+
+      return res.json({ success: true, data: appointment });
+    } catch (error) {
+      console.error("약속 등록 실패:", error);
+      return res.status(500).json({
+        success: false,
+        message: "약속 등록 중 오류가 발생했습니다."
+      });
     }
-
-    const { buyerId, date, time, place } = req.body;
-    if (!buyerId || !date || !time || !place) {
-      return res.status(400).json({ success: false, message: "모든 필드를 입력해 주세요." });
-    }
-
-    const appointment = await addAppointment({
-      postId: post.id,
-      buyerId,
-      datetime: `${date}T${time}`,
-      place
-    });
-
-    await updatePost(post.id, { status: "예약중", appointmentId: appointment.postId });
-
-    scheduleAppointmentReminder({ appointment, io });
-
-    io.to(post.id).emit("systemMessage", {
-      type: "appointment",
-      content: `약속이 등록되었습니다: ${appointment.datetime.replace("T", " ")} @ ${appointment.place}`
-    });
-
-    res.json({ success: true, data: appointment });
   });
 
   // 약속 철회 요청 (상대방 동의 대기)
@@ -112,14 +126,18 @@ function createApiRouter(io) {
     if (!userId) {
       return res.status(400).json({ success: false, message: "사용자 정보가 필요합니다." });
     }
-    if (userId !== appointment.buyerId && userId !== appointment.sellerId) {
+    const userIdNumber = Number(userId);
+    const buyerId = Number(appointment.buyerId);
+    const sellerId = Number(appointment.sellerId);
+    const cancelRequestedBy = appointment.cancelRequestedBy ? Number(appointment.cancelRequestedBy) : null;
+    if (userIdNumber !== buyerId && userIdNumber !== sellerId) {
       return res.status(403).json({ success: false, message: "약속 참여자만 철회를 요청할 수 있습니다." });
     }
-    if (appointment.cancelRequestedBy && appointment.cancelRequestedBy !== userId) {
+    if (cancelRequestedBy && cancelRequestedBy !== userIdNumber) {
       return res.status(400).json({ success: false, message: "상대방 동의를 기다리고 있습니다." });
     }
 
-    const updatedAppointment = await requestAppointmentCancellation(post.id, userId);
+    const updatedAppointment = await requestAppointmentCancellation(post.id, userIdNumber);
     io.to(post.id).emit("systemMessage", {
       type: "appointment",
       content: "약속 철회가 요청되었습니다. 상대방이 동의하면 예약이 취소됩니다."
@@ -142,15 +160,17 @@ function createApiRouter(io) {
     if (!userId) {
       return res.status(400).json({ success: false, message: "사용자 정보가 필요합니다." });
     }
+    const userIdNumber = Number(userId);
+    const cancelRequestedBy = appointment.cancelRequestedBy ? Number(appointment.cancelRequestedBy) : null;
     if (!appointment.cancelRequestedBy) {
       return res.status(400).json({ success: false, message: "철회 요청이 먼저 필요합니다." });
     }
-    if (userId === appointment.cancelRequestedBy) {
+    if (userIdNumber === cancelRequestedBy) {
       return res.status(400).json({ success: false, message: "상대방이 동의해야 합니다." });
     }
 
     await finalizeAppointmentCancellation(post.id);
-    await updatePost(post.id, { status: "판매중", appointmentId: null });
+    await updatePost(post.id, { status: "판매중" });
     clearAppointmentReminder(post.id);
 
     io.to(post.id).emit("systemMessage", {
